@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
     exit;
 }
 
-include __DIR__ . "/../db_connection.php";
+include "../db_connection.php";
 
 $usuario_id = intval($_SESSION['user_id'] ?? 0);
 

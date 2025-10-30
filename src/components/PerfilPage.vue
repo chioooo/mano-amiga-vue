@@ -1,19 +1,15 @@
-<script setup lang="ts">
+<script setup>
 import { ref, onMounted } from 'vue'
 import api from '@/api'
 
-const user = ref(null)
+const user = JSON.parse(localStorage.getItem('user') || '{}')
+const usuario = ref(null)
 
-
-async function verPerfil() {
+const verPerfil = async () => {
   try {
-    const { data } = await api.get('usuarios_gets.php')
-    if (data.error) {
-      console.warn('No autenticado:', data.error)
-      user.value = null
-      return
-    }
-    user.value = data
+    const response = await api.get(`usuarios_get.php?id=${user.id}`)
+    usuario.value = response.data
+    console.log(usuario.value)
   } catch (error) {
     console.error('Error al obtener el perfil:', error)
   }
@@ -26,14 +22,14 @@ onMounted(() => {
 
 <template>
 
-  <div class="profile" v-if="user">
+  <div class="profile" v-if="usuario">
     <div id="avatar">
       <img src="..\assets\img\perfil.jpg" alt="foto de perfil" />
       <div class="user-info">
-        <h2>Nombre: {{ user.full_name }}</h2>
-        <h2>Usuario: {{ user.username }}</h2>
-        <h2>Tipo de usuario: {{ user.is_admin == 1 ? 'Administrador' : 'Voluntario' }}</h2>
-        <p>Activa desde septiembre del 2024</p>
+        <h2>Nombre: {{ usuario.full_name }}</h2>
+        <h2>Usuario: {{ usuario.username }}</h2>
+        <h2>Tipo de usuario: {{ usuario.is_admin == 1 ? 'Administrador' : 'Voluntario' }}</h2>
+        <p>Activa desde {{usuario.fecha_registro}}</p>
       </div>
     </div>
   </div>

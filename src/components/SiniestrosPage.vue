@@ -9,7 +9,7 @@ const closeModal = () => showModal.value = false
 
 const location = ref(null)
 const level = ref(null)
-const date_time = ref(null) 
+const date_time = ref(null)
 const resources = ref(null)
 const active = ref(null)
 const router = useRouter()
@@ -26,10 +26,8 @@ onMounted(async () => {
   } catch (error) {
     console.error('Error al cargar siniestros:', error)
   }
-  
+
 })
-
-
 
 const registrarSiniestro = async () => {
   try {
@@ -54,9 +52,6 @@ const registrarSiniestro = async () => {
     console.error(err)
   }
 }
-
-
-
 </script>
 
 <template>
