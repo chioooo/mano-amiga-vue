@@ -5,8 +5,15 @@ import api from '@/api'
 const siniestros = ref([])
 const user = JSON.parse(localStorage.getItem('user') || '{}')
 const showModal = ref(false)
+const message = ref('')
 
-// Cargar siniestros
+const name = ref(null)
+const description = ref(null)
+const category = ref(null)
+const quantity = ref(null)
+const siniestro_id = ref(null)
+
+// Cargar posts
 const cargarPosts = async () => {
   try {
     const response = await api.get('siniestros_list.php')
@@ -22,7 +29,10 @@ const toggleDropdown = (id) => {
   openDropdown.value = openDropdown.value === id ? null : id
 }
 
-const openModal = () => (showModal.value = true)
+const openModal = (id) => {
+  showModal.value = true
+  siniestro_id.value = id
+}
 const closeModal = () => (showModal.value = false)
 
 // Unirse como voluntario
@@ -41,6 +51,32 @@ const unirseComoVoluntario = async (id) => {
     }
   } catch {
     alert('Error al conectar con el servidor.')
+  }
+}
+
+const registrarRecurso = async () => {
+  try {
+    const formData = new FormData()
+    formData.append('name', name.value)
+    formData.append('description', description.value)
+    formData.append('category', category.value)
+    formData.append('quantity', quantity.value)
+    formData.append('siniestro_id', siniestro_id.value)
+    formData.append('usuario_id', user.id)
+
+    const respuesta = await api.post('recursos_add.php', formData)
+    message.value = respuesta.data.message
+
+    if (respuesta.data.status === 'success') {
+      alert('Recurso registrado correctamente.')
+      closeModal()
+      await cargarPosts()
+    } else {
+      alert(respuesta.data.message || 'No se pudo registrar el recurso.')
+    }
+  } catch (err) {
+    message.value = 'Error de conexión con el servidor'
+    console.error(err)
   }
 }
 
@@ -87,7 +123,7 @@ onMounted(() => {
                 @click="
                   () => {
                     unirseComoVoluntario(s.id)
-                    abrirModalDonador(s.id)
+                    openModal(s.id)
                   }
                 "
               >
@@ -106,7 +142,7 @@ onMounted(() => {
   <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
       <h2>Nuevos recursos</h2>
-      <form @submit.prevent="registrarCita">
+      <form @submit.prevent="registrarRecurso">
         <label>Nombre del recurso:</label>
         <input type="text" v-model="name" required />
 

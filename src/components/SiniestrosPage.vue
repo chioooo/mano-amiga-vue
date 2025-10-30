@@ -1,17 +1,15 @@
 <script setup>
-import { ref, onMounted, useId } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
 const showModal = ref(false)
 
-const openModal = () => showModal.value = true
-const closeModal = () => showModal.value = false
+const openModal = () => (showModal.value = true)
+const closeModal = () => (showModal.value = false)
 
 const location = ref(null)
 const level = ref(null)
 const date_time = ref(null)
 const resources = ref(null)
 const active = ref(null)
-const router = useRouter()
 const message = ref('')
 
 import api from '@/api'
@@ -27,7 +25,7 @@ const cargarSiniestros = async () => {
   }
 }
 
-onMounted( () => {
+onMounted(() => {
   cargarSiniestros()
 })
 const registrarSiniestro = async () => {
@@ -85,8 +83,6 @@ const registrarSiniestro = async () => {
           <td>
             <button id="btn-edit" class="edit"><i class="fa-solid fa-pen-to-square"></i></button>
             <button id="btn-delete" class="delete"><i class="fa-solid fa-trash"></i></button>
-
-
           </td>
         </tr>
       </tbody>
@@ -97,7 +93,6 @@ const registrarSiniestro = async () => {
     <div class="modal-content">
       <h2>Nuevo Siniestro</h2>
       <form @submit.prevent="registrarSiniestro">
-
         <label>Ubicación:</label>
         <input type="text" v-model="location" required />
         <label>Nivel:</label>
@@ -121,15 +116,10 @@ const registrarSiniestro = async () => {
         <div class="modal-actions">
           <button type="button" @click="closeModal">Cancelar</button>
           <button type="submit">Guardar</button>
-
         </div>
       </form>
     </div>
-
   </div>
-
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>
