@@ -1,11 +1,22 @@
 <?php
 global $pdo;
 session_start();
-include __DIR__ . "/../db_connection.php";
 
-header('Content-Type: application/json');
+// --- 🔹 Encabezados CORS ---
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json; charset=utf-8");
 
-$usuario_id   = intval($_SESSION['user_id'] ?? 0);
+// --- 🔹 Manejo de solicitud preflight (OPTIONS) ---
+if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+    http_response_code(200);
+    exit;
+}
+
+require "../db_connection.php";
+
+$usuario_id   = $_POST['usuario_id'] ?? null;
 $siniestro_id = $_POST['siniestro_id'] ?? null;
 
 if (!$usuario_id || !$siniestro_id) {
