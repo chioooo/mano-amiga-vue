@@ -1,9 +1,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 const showModal = ref(false)
+const showEditModal = ref(false)
 
 const openModal = () => (showModal.value = true)
 const closeModal = () => (showModal.value = false)
+const openEditModal = () => (showEditModal.value = true)
+const closeEditModal = () => (showEditModal.value = false)
 
 const location = ref(null)
 const level = ref(null)
@@ -51,6 +54,10 @@ const registrarSiniestro = async () => {
     message.value = 'Error de conexión con el servidor'
     console.error(err)
   }
+}
+
+const editarSiniestro = async () => {
+
 }
 </script>
 
@@ -115,6 +122,38 @@ const registrarSiniestro = async () => {
 
         <div class="modal-actions">
           <button type="button" @click="closeModal">Cancelar</button>
+          <button type="submit">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
+    <div class="modal-content">
+      <h2>Nuevo Siniestro</h2>
+      <form @submit.prevent="editarSiniestro">
+        <label>Ubicación:</label>
+        <input type="text" v-model="location" required />
+        <label>Nivel:</label>
+        <select v-model="level" required>
+          <option value="" disabled>Seleccione nivel</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+        <label>Fecha:</label>
+        <input type="date" v-model="date_time" required />
+        <label>Recursos:</label>
+        <input type="text" v-model="resources" required />
+        <label>Activo:</label>
+        <select v-model="active" required>
+          <option value="" disabled>Seleccione estado</option>
+          <option value="1">Sí</option>
+          <option value="0">No</option>
+        </select>
+
+        <div class="modal-actions">
+          <button type="button" @click="showEditModal">Cancelar</button>
           <button type="submit">Guardar</button>
         </div>
       </form>
