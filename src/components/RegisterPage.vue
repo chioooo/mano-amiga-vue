@@ -22,7 +22,6 @@ const register = async () => {
     })
     message.value = response.data.message
 
-
     if (response.data.status === 'success') {
       alert('Cuenta creada correctamente.')
       router.push('/login')
