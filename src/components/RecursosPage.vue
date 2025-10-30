@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import { ref, onMounted, useId } from 'vue'
 const recursos = ref([])
 import api from '@/api'
@@ -10,7 +10,7 @@ onMounted(async () => {
   } catch (error) {
     console.error('Error al cargar recursos:', error)
   }
-  
+
 })
 </script>
 
