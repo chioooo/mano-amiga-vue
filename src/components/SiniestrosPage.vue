@@ -1,12 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-const showModal = ref(false)
-const showEditModal = ref(false)
+import api from '@/api'
 
-const openModal = () => (showModal.value = true)
-const closeModal = () => (showModal.value = false)
-const openEditModal = () => (showEditModal.value = true)
-const closeEditModal = () => (showEditModal.value = false)
+const showModal = ref(false)
+
+const isEditing = ref(false)
+const editingId = ref(null)
 
 const location = ref(null)
 const level = ref(null)
@@ -15,9 +14,24 @@ const resources = ref(null)
 const active = ref(null)
 const message = ref('')
 
-import api from '@/api'
-
 const siniestros = ref([])
+const openModal = (siniestro = null) => {
+  if (siniestro) {
+    isEditing.value = true
+    editingId.value = siniestro.id
+    location.value = siniestro.location
+    level.value = siniestro.level
+    date_time.value = siniestro.date_time
+    resources.value = siniestro.resources
+    active.value = siniestro.active
+  } else {
+    isEditing.value = false
+    editingId.value = null
+    limpiarFormulario()
+  }
+  showModal.value = true
+}
+const closeModal = () => (showModal.value = false)
 
 const cargarSiniestros = async () => {
   try {
@@ -31,6 +45,23 @@ const cargarSiniestros = async () => {
 onMounted(() => {
   cargarSiniestros()
 })
+
+const limpiarFormulario = () => {
+  location.value = ''
+  level.value = ''
+  date_time.value = ''
+  resources.value = ''
+  active.value = ''
+}
+
+const guardarSiniestro = async () => {
+  if (isEditing.value) {
+    await editarSiniestro()
+  } else {
+    await registrarSiniestro()
+  }
+}
+
 const registrarSiniestro = async () => {
   try {
     const formData = new FormData()
@@ -57,7 +88,26 @@ const registrarSiniestro = async () => {
 }
 
 const editarSiniestro = async () => {
+  try {
+    const formData = new FormData()
+    formData.append('id', editingId.value)
+    formData.append('location', location.value)
+    formData.append('level', level.value)
+    formData.append('date_time', date_time.value)
+    formData.append('resources', resources.value)
+    formData.append('active', active.value)
 
+    const respuesta = await api.post('siniestros_update.php', formData)
+    if (respuesta.data.status === 'success') {
+      alert('Siniestro actualizado correctamente.')
+      closeModal()
+      await cargarSiniestros()
+    } else {
+      alert(respuesta.data.message || 'No se pudo actualizar el siniestro.')
+    }
+  } catch (err) {
+    console.error('Error al editar siniestro:', err)
+  }
 }
 </script>
 
@@ -88,7 +138,9 @@ const editarSiniestro = async () => {
           <td>{{ row.resources }}</td>
           <td>{{ row.active }}</td>
           <td>
-            <button id="btn-edit" class="edit"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button id="btn-edit" class="edit" @click="openModal(row)">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
             <button id="btn-delete" class="delete"><i class="fa-solid fa-trash"></i></button>
           </td>
         </tr>
@@ -98,10 +150,11 @@ const editarSiniestro = async () => {
 
   <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
-      <h2>Nuevo Siniestro</h2>
-      <form @submit.prevent="registrarSiniestro">
+      <h2>{{ isEditing ? 'Editar siniestro' : 'Nuevo siniestro' }}</h2>
+      <form @submit.prevent="guardarSiniestro">
         <label>Ubicación:</label>
         <input type="text" v-model="location" required />
+
         <label>Nivel:</label>
         <select v-model="level" required>
           <option value="" disabled>Seleccione nivel</option>
@@ -109,10 +162,13 @@ const editarSiniestro = async () => {
           <option value="2">2</option>
           <option value="3">3</option>
         </select>
-        <label>Fecha:</label>
-        <input type="date" v-model="date_time" required />
+
+        <label>Fecha y hora:</label>
+        <input type="datetime-local" v-model="date_time" required />
+
         <label>Recursos:</label>
         <input type="text" v-model="resources" required />
+
         <label>Activo:</label>
         <select v-model="active" required>
           <option value="" disabled>Seleccione estado</option>
@@ -122,39 +178,7 @@ const editarSiniestro = async () => {
 
         <div class="modal-actions">
           <button type="button" @click="closeModal">Cancelar</button>
-          <button type="submit">Guardar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
-    <div class="modal-content">
-      <h2>Nuevo Siniestro</h2>
-      <form @submit.prevent="editarSiniestro">
-        <label>Ubicación:</label>
-        <input type="text" v-model="location" required />
-        <label>Nivel:</label>
-        <select v-model="level" required>
-          <option value="" disabled>Seleccione nivel</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-        </select>
-        <label>Fecha:</label>
-        <input type="date" v-model="date_time" required />
-        <label>Recursos:</label>
-        <input type="text" v-model="resources" required />
-        <label>Activo:</label>
-        <select v-model="active" required>
-          <option value="" disabled>Seleccione estado</option>
-          <option value="1">Sí</option>
-          <option value="0">No</option>
-        </select>
-
-        <div class="modal-actions">
-          <button type="button" @click="showEditModal">Cancelar</button>
-          <button type="submit">Guardar</button>
+          <button type="submit">{{ isEditing ? 'Actualizar' : 'Guardar' }}</button>
         </div>
       </form>
     </div>
