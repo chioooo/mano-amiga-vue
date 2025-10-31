@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, useId } from 'vue'
+import { ref, onMounted } from 'vue'
 const recursos = ref([])
 import api from '@/api'
 

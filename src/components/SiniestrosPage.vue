@@ -1,9 +1,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-const showModal = ref(false)
+import api from '@/api'
 
-const openModal = () => (showModal.value = true)
-const closeModal = () => (showModal.value = false)
+const showModal = ref(false)
+const showDeleteModal = ref(false)
+
+const isEditing = ref(false)
+const editingId = ref(null)
 
 const location = ref(null)
 const level = ref(null)
@@ -12,9 +15,13 @@ const resources = ref(null)
 const active = ref(null)
 const message = ref('')
 
-import api from '@/api'
-
 const siniestros = ref([])
+const selectedSiniestroId = ref(null)
+
+onMounted(() => {
+  cargarSiniestros()
+})
+
 
 const cargarSiniestros = async () => {
   try {
@@ -25,9 +32,22 @@ const cargarSiniestros = async () => {
   }
 }
 
-onMounted(() => {
-  cargarSiniestros()
-})
+const limpiarFormulario = () => {
+  location.value = ''
+  level.value = ''
+  date_time.value = ''
+  resources.value = ''
+  active.value = ''
+}
+
+const guardarSiniestro = async () => {
+  if (isEditing.value) {
+    await editarSiniestro()
+  } else {
+    await registrarSiniestro()
+  }
+}
+
 const registrarSiniestro = async () => {
   try {
     const formData = new FormData()
@@ -52,11 +72,84 @@ const registrarSiniestro = async () => {
     console.error(err)
   }
 }
+
+const editarSiniestro = async () => {
+  try {
+    const formData = new FormData()
+    formData.append('id', editingId.value)
+    formData.append('location', location.value)
+    formData.append('level', level.value)
+    formData.append('date_time', date_time.value)
+    formData.append('resources', resources.value)
+    formData.append('active', active.value)
+
+    const respuesta = await api.post('siniestros_update.php', formData)
+    if (respuesta.data.status === 'success') {
+      alert('Siniestro actualizado correctamente.')
+      closeModal()
+      await cargarSiniestros()
+    } else {
+      alert(respuesta.data.message || 'No se pudo actualizar el siniestro.')
+    }
+  } catch (err) {
+    console.error('Error al editar siniestro:', err)
+  }
+}
+
+const eliminarSiniestro = async () => {
+  try {
+    const formData = new FormData()
+    formData.append('id', selectedSiniestroId.value)
+    const respuesta = await api.post('siniestros_delete.php', formData)
+    if (respuesta.data.status === 'success') {
+      await cargarSiniestros()
+      closeDeleteModal()
+    } else {
+      alert(respuesta.data.message || 'No se pudo eliminar el siniestro.')
+    }
+  } catch (err) {
+    console.error('Error al editar siniestro:', err)
+  }
+}
+
+const openModal = (siniestro = null) => {
+  if (siniestro) {
+    isEditing.value = true
+    editingId.value = siniestro.id
+    location.value = siniestro.location
+    level.value = siniestro.level
+    date_time.value = siniestro.date_time
+    resources.value = siniestro.resources
+    active.value = siniestro.active
+  } else {
+    isEditing.value = false
+    editingId.value = null
+    limpiarFormulario()
+  }
+  showModal.value = true
+}
+
+const closeModal = () => {
+  limpiarFormulario()
+  isEditing.value = false
+  editingId.value = null
+  showModal.value = false
+}
+
+const openDeleteModal = (siniestro = null) => {
+  selectedSiniestroId.value = siniestro.id
+  showDeleteModal.value = true
+}
+
+const closeDeleteModal = () => {
+  selectedSiniestroId.value = null
+  showDeleteModal.value = false
+}
 </script>
 
 <template>
   <div id="siniestros">
-    <button id="btn-new-siniestro" @click="openModal" style="margin-top: 20px">
+    <button id="btn-new-siniestro" @click="openModal()" style="margin-top: 20px">
       <i class="fa-solid fa-plus"></i>
       Crear
     </button>
@@ -81,8 +174,12 @@ const registrarSiniestro = async () => {
           <td>{{ row.resources }}</td>
           <td>{{ row.active }}</td>
           <td>
-            <button id="btn-edit" class="edit"><i class="fa-solid fa-pen-to-square"></i></button>
-            <button id="btn-delete" class="delete"><i class="fa-solid fa-trash"></i></button>
+            <button id="btn-edit" class="edit" @click="openModal(row)">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <button id="btn-delete" class="delete" @click="openDeleteModal(row)">
+              <i class="fa-solid fa-trash"></i>
+            </button>
           </td>
         </tr>
       </tbody>
@@ -91,10 +188,11 @@ const registrarSiniestro = async () => {
 
   <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
-      <h2>Nuevo Siniestro</h2>
-      <form @submit.prevent="registrarSiniestro">
+      <h2>{{ isEditing ? 'Editar siniestro' : 'Nuevo siniestro' }}</h2>
+      <form @submit.prevent="guardarSiniestro">
         <label>Ubicación:</label>
         <input type="text" v-model="location" required />
+
         <label>Nivel:</label>
         <select v-model="level" required>
           <option value="" disabled>Seleccione nivel</option>
@@ -102,10 +200,13 @@ const registrarSiniestro = async () => {
           <option value="2">2</option>
           <option value="3">3</option>
         </select>
-        <label>Fecha:</label>
-        <input type="date" v-model="date_time" required />
+
+        <label>Fecha y hora:</label>
+        <input type="datetime-local" v-model="date_time" required />
+
         <label>Recursos:</label>
         <input type="text" v-model="resources" required />
+
         <label>Activo:</label>
         <select v-model="active" required>
           <option value="" disabled>Seleccione estado</option>
@@ -115,9 +216,20 @@ const registrarSiniestro = async () => {
 
         <div class="modal-actions">
           <button type="button" @click="closeModal">Cancelar</button>
-          <button type="submit">Guardar</button>
+          <button type="submit">{{ isEditing ? 'Actualizar' : 'Guardar' }}</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeDeleteModal">
+    <div class="modal-content">
+      <h2>Eliminar Siniestro</h2>
+      <p>¿Esta seguro que desea eliminar el siniestro {{ selectedSiniestroId }}?</p>
+      <div class="modal-actions">
+        <button type="button" @click="closeDeleteModal">Cancelar</button>
+        <button type="button" @click="eliminarSiniestro">Confirmar</button>
+      </div>
     </div>
   </div>
 </template>

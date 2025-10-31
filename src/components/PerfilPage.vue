@@ -28,7 +28,7 @@ onMounted(() => {
       <div class="user-info">
         <h2>Nombre: {{ usuario.full_name }}</h2>
         <h2>Usuario: {{ usuario.username }}</h2>
-        <h2>Tipo de usuario: {{ usuario.is_admin == 1 ? 'Administrador' : 'Voluntario' }}</h2>
+        <h2>Tipo de usuario: {{ usuario.is_admin === 1 ? 'Administrador' : 'Voluntario' }}</h2>
         <p>Activa desde {{usuario.fecha_registro}}</p>
       </div>
     </div>
