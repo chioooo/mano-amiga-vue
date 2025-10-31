@@ -1,6 +1,4 @@
 <script setup>
-<<<<<<< Updated upstream
-=======
 import { ref, onMounted } from 'vue'
 import api from '@/api'
 
@@ -31,7 +29,6 @@ const cargarUsuarios = async () => {
 onMounted(() => {
   cargarUsuarios()
 })
->>>>>>> Stashed changes
 
 
 const eliminarUsuario = async () => {
@@ -109,9 +106,7 @@ const closeDeleteModal = () => {
 </script>
 
 <template>
-<<<<<<< Updated upstream
 
-=======
   <div id="usuarios">
     <button id="btn-new-siniestro" @click="openModal()" style="margin-top: 20px">
       <i class="fa-solid fa-plus"></i>
@@ -192,7 +187,6 @@ const closeDeleteModal = () => {
       </div>
     </div>
   
->>>>>>> Stashed changes
 </template>
 
 <style scoped></style>
