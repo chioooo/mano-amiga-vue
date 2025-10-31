@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import api from '@/api'
 
 const showModal = ref(false)
+const showDeleteModal = ref(false)
 
 const isEditing = ref(false)
 const editingId = ref(null)
@@ -15,23 +16,12 @@ const active = ref(null)
 const message = ref('')
 
 const siniestros = ref([])
-const openModal = (siniestro = null) => {
-  if (siniestro) {
-    isEditing.value = true
-    editingId.value = siniestro.id
-    location.value = siniestro.location
-    level.value = siniestro.level
-    date_time.value = siniestro.date_time
-    resources.value = siniestro.resources
-    active.value = siniestro.active
-  } else {
-    isEditing.value = false
-    editingId.value = null
-    limpiarFormulario()
-  }
-  showModal.value = true
-}
-const closeModal = () => (showModal.value = false)
+const selectedSiniestroId = ref(null)
+
+onMounted(() => {
+  cargarSiniestros()
+})
+
 
 const cargarSiniestros = async () => {
   try {
@@ -41,10 +31,6 @@ const cargarSiniestros = async () => {
     console.error('Error al cargar siniestros:', error)
   }
 }
-
-onMounted(() => {
-  cargarSiniestros()
-})
 
 const limpiarFormulario = () => {
   location.value = ''
@@ -109,11 +95,61 @@ const editarSiniestro = async () => {
     console.error('Error al editar siniestro:', err)
   }
 }
+
+const eliminarSiniestro = async () => {
+  try {
+    const formData = new FormData()
+    formData.append('id', selectedSiniestroId.value)
+    const respuesta = await api.post('siniestros_delete.php', formData)
+    if (respuesta.data.status === 'success') {
+      await cargarSiniestros()
+      closeDeleteModal()
+    } else {
+      alert(respuesta.data.message || 'No se pudo eliminar el siniestro.')
+    }
+  } catch (err) {
+    console.error('Error al editar siniestro:', err)
+  }
+}
+
+const openModal = (siniestro = null) => {
+  if (siniestro) {
+    isEditing.value = true
+    editingId.value = siniestro.id
+    location.value = siniestro.location
+    level.value = siniestro.level
+    date_time.value = siniestro.date_time
+    resources.value = siniestro.resources
+    active.value = siniestro.active
+  } else {
+    isEditing.value = false
+    editingId.value = null
+    limpiarFormulario()
+  }
+  showModal.value = true
+}
+
+const closeModal = () => {
+  limpiarFormulario()
+  isEditing.value = false
+  editingId.value = null
+  showModal.value = false
+}
+
+const openDeleteModal = (siniestro = null) => {
+  selectedSiniestroId.value = siniestro.id
+  showDeleteModal.value = true
+}
+
+const closeDeleteModal = () => {
+  selectedSiniestroId.value = null
+  showDeleteModal.value = false
+}
 </script>
 
 <template>
   <div id="siniestros">
-    <button id="btn-new-siniestro" @click="openModal" style="margin-top: 20px">
+    <button id="btn-new-siniestro" @click="openModal()" style="margin-top: 20px">
       <i class="fa-solid fa-plus"></i>
       Crear
     </button>
@@ -141,7 +177,9 @@ const editarSiniestro = async () => {
             <button id="btn-edit" class="edit" @click="openModal(row)">
               <i class="fa-solid fa-pen-to-square"></i>
             </button>
-            <button id="btn-delete" class="delete"><i class="fa-solid fa-trash"></i></button>
+            <button id="btn-delete" class="delete" @click="openDeleteModal(row)">
+              <i class="fa-solid fa-trash"></i>
+            </button>
           </td>
         </tr>
       </tbody>
@@ -181,6 +219,17 @@ const editarSiniestro = async () => {
           <button type="submit">{{ isEditing ? 'Actualizar' : 'Guardar' }}</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeDeleteModal">
+    <div class="modal-content">
+      <h2>Eliminar Siniestro</h2>
+      <p>¿Esta seguro que desea eliminar el siniestro {{ selectedSiniestroId }}?</p>
+      <div class="modal-actions">
+        <button type="button" @click="closeDeleteModal">Cancelar</button>
+        <button type="button" @click="eliminarSiniestro">Confirmar</button>
+      </div>
     </div>
   </div>
 </template>
