@@ -9,7 +9,7 @@ const verPerfil = async () => {
   try {
     const response = await api.get(`usuarios_get.php?id=${user.id}`)
     usuario.value = response.data
-    console.log(usuario.value)
+
   } catch (error) {
     console.error('Error al obtener el perfil:', error)
   }

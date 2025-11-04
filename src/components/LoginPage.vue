@@ -22,7 +22,7 @@ const login = async () => {
     if (response.data.status === 'success') {
       document.body.className = 'main-page'
       localStorage.setItem('user', JSON.stringify(response.data.user))
-      console.log(response.data.user)
+
       router.push('/app')
     } else {
       error.value = response.data.message || 'Credenciales incorrectas'

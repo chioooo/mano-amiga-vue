@@ -200,9 +200,29 @@ const closeDeleteModal = () => {
           <option value="2">2</option>
           <option value="3">3</option>
         </select>
+        
 
-        <label>Fecha y hora:</label>
-        <input type="datetime-local" v-model="date_time" required />
+
+
+
+
+
+
+
+
+
+        <label
+        
+        v-if=" !isEditing"
+        
+        
+        >Fecha y hora:</label>
+        <input 
+        
+
+        v-if="!isEditing"
+        
+        type="datetime-local" v-model="date_time"  required/>
 
         <label>Recursos:</label>
         <input type="text" v-model="resources" required />
